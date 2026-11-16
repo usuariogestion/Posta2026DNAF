@@ -85,11 +85,12 @@ const CONFIG = {
   titulo: "Aporte solidario DNAF",
   personas: 87,
   cuota: 10,                              // USD por persona
-  limite: "2026-11-16T17:00:00-05:00",    // lunes 16 nov, 12:00 (hora de Ecuador)
+  limite: "2026-11-16T19:00:00-05:00",    // lunes 16 nov, 19:00 (hora de Ecuador)
   sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJUgQpb4VDj1h8S-Y5-ElA7Ec3i7yC43UxQY5DHFOdXmF2UrBMSmLhrE0y_cZEtGGNlN5ZBJwNmqvO/pub?output=csv",
   sheetId: "",   // respaldo si el CSV falla
   modo: "valores",                        // el total es la suma de la columna L
-  colNombre: 1, colPago: 12, colValor: 11, // B = Nombre, M = Medio de pago (si tiene dato, ya pagó), L = Valor aportación
+  colNombre: 1, colPago: 12, colValor: 11, colObs: 13, // N = Observación (si tiene dato, apadrinó)
+  // B = Nombre, M = Medio de pago (si tiene dato, ya pagó), L = Valor aportación
   refrescarSeg: 30
 };
 /* ================================================= */
@@ -148,7 +149,7 @@ async function load(){
   rows.slice(1).forEach(r=>{
     const nm=(r[cN]||"").trim(), pago=(r[cP]||"").trim();
     if(!nm||!pago) return;
-    cnt++; list.push(titleCase(nm)); val+=num(r[cV]);
+    cnt++; list.push({n:titleCase(nm),p:String(r[CONFIG.colObs]||"").trim()!==""}); val+=num(r[cV]);
   });
   $("err").textContent=""; names=list; render(CONFIG.modo==="valores"?val:cnt*CONFIG.cuota, cnt);
 }
@@ -180,8 +181,8 @@ function tick(){
 let lastN="";
 function toast(){
   if(!names.length) return;
-  const pool=names.length>1?names.filter(x=>x!==lastN):names, n=pool[Math.floor(Math.random()*pool.length)], t=$("toast"); lastN=n;
-  t.innerHTML = `💖 <em>${n.replace(/[<>&]/g,"")}</em> ya aportó`;
+  const pool=names.length>1?names.filter(x=>x.n!==lastN):names, n=pool[Math.floor(Math.random()*pool.length)], t=$("toast"); lastN=n.n;
+  t.innerHTML = `💖 <em>${n.n.replace(/[<>&]/g,"")}</em> ${n.p?"aportó y apadrinó":"ya aportó"}`;
   t.classList.add("on"); setTimeout(()=>t.classList.remove("on"),3200);
 }
 function confetti(){
